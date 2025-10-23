@@ -177,7 +177,6 @@ def detect():
     results = detect_emotions(rgb)
     return jsonify({"status": "success", "faces": results}), 200
 
-
 @app.route("/analyze-text", methods=["POST"])
 def analyze_text():
     try:
@@ -210,5 +209,13 @@ def analyze_text():
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ✅ Home route for Render deployment
+@app.route("/")
+def home():
+    return "🎵 MoodTune backend is running successfully on Render!"
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True, threaded=True)
