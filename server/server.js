@@ -262,6 +262,9 @@ app.get("/api/analytics", (req, res) => {
     ],
   });
 });
+app.get("/", (req, res) => {
+  res.send("🎶 MoodTune Backend API is running!");
+});
 
 // Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
