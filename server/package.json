@@ -1,32 +1,39 @@
 {
   "name": "moodtune-server",
   "version": "1.0.0",
-  "description": "Backend for MoodTune application",
+  "description": "Backend server for MoodTune AI-powered music app",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
+  "keywords": [
+    "music",
+    "ai",
+    "backend",
+    "express",
+    "flask-integration"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
     "@distube/ytdl-core": "^4.16.12",
     "axios": "^1.11.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
+    "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "firebase-admin": "^12.7.0",
-    "mongoose": "^8.17.2",
-    "moodtune": "file:..",
+    "mongoose": "^8.7.0",
     "play-dl": "^1.9.7",
-    "react-youtube": "^10.1.0",
     "spotify-web-api-node": "^5.0.2",
     "yt-search": "^2.13.1",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
+  },
+  "engines": {
+    "node": ">=18.x"
   }
 }
