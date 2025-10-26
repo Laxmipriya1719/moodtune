@@ -49,6 +49,15 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// 🟠 GET all moods (for testing or admin)
+router.get("/", async (req, res) => {
+  try {
+    const moods = await Mood.find();
+    res.json(moods);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // 🤖 DETECT mood using AI (via ML service)
 router.post("/detect", async (req, res) => {
