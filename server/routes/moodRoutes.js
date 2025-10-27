@@ -7,6 +7,39 @@ const router = express.Router();
 // 🌐 Your deployed ML service URL
 const ML_SERVICE_URL = "https://moodtune-1.onrender.com";
 
+// 🤖 DETECT mood using AI (via ML service) — MUST be first!
+router.post("/detect", async (req, res) => {
+  try {
+    const { inputData, userId } = req.body;
+
+    if (!inputData) {
+      return res.status(400).json({ error: "Missing inputData" });
+    }
+
+    // Send text/audio data to ML service
+    const response = await axios.post(`${ML_SERVICE_URL}/predict`, {
+      input: inputData,
+    });
+
+    const detectedMood = response.data.mood || "neutral";
+
+    // Save detected mood in MongoDB
+    const mood = new Mood({ userId, mood: detectedMood });
+    await mood.save();
+
+    res.status(200).json({
+      message: "Mood detected successfully",
+      mood: detectedMood,
+      savedMood: mood,
+    });
+  } catch (err) {
+    console.error("⚠️ ML Service Error:", err.message);
+    res.status(500).json({
+      error: "Failed to detect mood. Please check ML service connection.",
+    });
+  }
+});
+
 // 🟢 CREATE mood entry manually
 router.post("/", async (req, res) => {
   try {
@@ -49,6 +82,7 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // 🟠 GET all moods (for testing or admin)
 router.get("/", async (req, res) => {
   try {
@@ -56,40 +90,6 @@ router.get("/", async (req, res) => {
     res.json(moods);
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-});
-
-// 🤖 DETECT mood using AI (via ML service)
-router.post("/detect", async (req, res) => {
-  try {
-    const { inputData, userId } = req.body;
-
-    if (!inputData) {
-      return res.status(400).json({ error: "Missing inputData" });
-    }
-
-    // Send text/audio data to ML service
-    const response = await axios.post(`${ML_SERVICE_URL}/predict`, {
-      input: inputData,
-    });
-
-    // Extract mood result from ML response
-    const detectedMood = response.data.mood || "neutral";
-
-    // Optionally save detected mood in MongoDB
-    const mood = new Mood({ userId, mood: detectedMood });
-    await mood.save();
-
-    res.status(200).json({
-      message: "Mood detected successfully",
-      mood: detectedMood,
-      savedMood: mood,
-    });
-  } catch (err) {
-    console.error("⚠️ ML Service Error:", err.message);
-    res.status(500).json({
-      error: "Failed to detect mood. Please check ML service connection.",
-    });
   }
 });
 
