@@ -7,7 +7,7 @@ const router = express.Router();
 // 🌐 Your deployed ML service URL
 const ML_SERVICE_URL = "https://moodtune-1.onrender.com";
 
-// 🤖 DETECT mood using AI (via ML service) — MUST be first!
+// 🤖 DETECT mood using AI (via ML service) — MUST be first
 router.post("/detect", async (req, res) => {
   try {
     const { inputData, userId } = req.body;
@@ -16,12 +16,13 @@ router.post("/detect", async (req, res) => {
       return res.status(400).json({ error: "Missing inputData" });
     }
 
-    // Send text/audio data to ML service
-    const response = await axios.post(`${ML_SERVICE_URL}/predict`, {
-      input: inputData,
+    // Call the correct Flask ML text endpoint
+    const response = await axios.post(`${ML_SERVICE_URL}/analyze-text`, {
+      text: inputData,
     });
 
-    const detectedMood = response.data.mood || "neutral";
+    // Extract mood from ML response
+    const detectedMood = response.data.faces?.[0]?.emotion || "neutral";
 
     // Save detected mood in MongoDB
     const mood = new Mood({ userId, mood: detectedMood });
