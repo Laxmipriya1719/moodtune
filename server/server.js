@@ -52,31 +52,47 @@ app.get("/", (req, res) => {
   res.send("🎶 MoodTune Backend API is running!");
 });
 
-// ------------------- ML Service Connection -------------------
-// Optional: separate POST route to call ML service directly
-app.post("/api/predict-mood", async (req, res) => {
+// ------------------- ML Service Keep-Alive Ping -------------------
+const ML_HEALTH_URL =
+  (process.env.ML_SERVICE_URL?.replace(/\/$/, "") || "https://moodtune-1.onrender.com") + "/health";
+
+setInterval(async () => {
   try {
-    const { text } = req.body;
-    if (!text) {
-      return res.status(400).json({ error: "Text is required" });
+    const resp = await axios.get(ML_HEALTH_URL, { timeout: 10000 });
+    console.log("✅ ML service awake ping successful", resp.status);
+  } catch (err) {
+    console.log("⚠️ ML service wake ping failed:", err.message);
+  }
+}, 5 * 60 * 1000); // every 5 minutes
+
+// ------------------- ML Service Connection -------------------
+app.post("/api/predict-mood", async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: "Text is required" });
+
+  const mlUrl =
+    process.env.ML_SERVICE_URL?.replace(/\/$/, "") + "/analyze-text" ||
+    "https://moodtune-1.onrender.com/analyze-text";
+
+  // Try ML service request with retry & timeout
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const response = await axios.post(mlUrl, { text }, { timeout: 20000 }); // 20s timeout
+      const detectedMood = response.data.faces?.[0]?.emotion || "Neutral";
+
+      return res.json({ mood: detectedMood, raw: response.data });
+    } catch (error) {
+      console.error(`❌ ML Service Error (attempt ${attempt}):`, error.message);
+      if (attempt === 2)
+        return res
+          .status(500)
+          .json({ error: "Failed to connect to ML service. Try again in a few seconds." });
+      console.log("⏳ Retrying ML service request...");
     }
-
-    const mlUrl =
-      process.env.ML_SERVICE_URL || "https://moodtune-1.onrender.com/analyze-text";
-
-    const response = await axios.post(mlUrl, { text });
-
-    // Return the detected mood from Flask ML backend
-    const detectedMood = response.data.faces?.[0]?.emotion || "Neutral";
-
-    return res.json({ mood: detectedMood, raw: response.data });
-  } catch (error) {
-    console.error("❌ ML Service Error:", error.message);
-    return res.status(500).json({ error: "Failed to connect to ML service" });
   }
 });
 
-// Default analytics example route
+// ------------------- Default Analytics Example Route -------------------
 app.get("/api/analytics", (req, res) => {
   res.json({
     moodData: [
